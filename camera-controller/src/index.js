@@ -1,27 +1,24 @@
 const Gpio = require('onoff').Gpio
 const config = require('./config')
 const axios = require('axios')
-// const fs = require('fs')
-// const util = require('util')
-// const exec = util.promisify(require('child_process').exec)
 const gphoto2 = require('gphoto2')
 
 function startCameraDaemon () {
   return new Promise((resolve, reject) => {
-    const GPhoto = new gphoto2.Gphoto2()
+    const GPhoto = new gphoto2.GPhoto2()
     GPhoto.list(listOfCameras => {
       const [camera] = listOfCameras
       if (!camera) return reject(new Error('No cameras found'))
 
       console.debug(`Found ${camera.model}, ready.`)
-    })
 
-    return resolve({
-      takePicture: () => new Promise((resolve, reject) => {
-        console.debug('Taking picture...')
-        camera.takePicture({ download: true }, (err, data) => {
-          if (err) return reject(err)
-          else return resolve(data)
+      return resolve({
+        takePicture: () => new Promise((resolve, reject) => {
+          console.debug('Taking picture...')
+          camera.takePicture({ download: true }, (err, data) => {
+            if (err) return reject(err)
+            else return resolve(data)
+          })
         })
       })
     })
