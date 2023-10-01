@@ -1,5 +1,5 @@
-import Path from "path";
-import {CameraList, run} from "@tsed/gphoto2-driver";
+const Path = require('path')
+const {CameraList, run} = require( "@tsed/gphoto2-driver")
 
 run(
   () => {
