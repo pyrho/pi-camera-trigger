@@ -2,6 +2,7 @@ const Gpio = require('onoff').Gpio
 const config = require('./config')
 const axios = require('axios')
 const gphoto2 = require('gphoto2')
+const net = require('net')
 
 function startCameraDaemon () {
   return new Promise((resolve, reject) => {
@@ -25,6 +26,26 @@ function startCameraDaemon () {
   })
 }
 
+/**
+  * @param {Buffer} imgData - JSDocs on property assignments work
+  * @returns {Promise<null>}
+   */
+function sendPictureToWebhook (imgData) {
+  return new Promise((resolve, reject) => {
+    const client = net.createConnection({ host: 'mk4-rtsp.lan', port: 3025 }, () => {
+      console.log('Connected to server')
+      client.write(imgData, err => {
+        if (err) {
+          return reject(err)
+        } else {
+          client.end()
+          return resolve(null)
+        }
+      })
+    })
+  })
+}
+
 function setupGpioHook (cameraDaemonInstance) {
   const button = new Gpio(config.gpio.pin, 'in', 'rising', { debounceTimeout: config.gpio.debounce })
 
@@ -34,11 +55,7 @@ function setupGpioHook (cameraDaemonInstance) {
     console.debug('Button pressed')
 
     cameraDaemonInstance.takePicture()
-      .then(imgData => {
-        axios.post(config.webhookUrl, imgData, {
-          headers: { 'Content-Type': 'image/jpeg' }
-        })
-      })
+      .then(sendPictureToWebhook)
       .then(() => {
         console.log('Image posted successfully!')
       })
