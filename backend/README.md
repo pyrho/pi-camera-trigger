@@ -1,4 +1,4 @@
-# camera-controller
+# backend
 
 To install dependencies:
 
