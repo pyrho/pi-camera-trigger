@@ -12,9 +12,11 @@
   "dependencies": {
     "axios": "^1.5.0",
     "gphoto2": "^0.3.2",
-    "onoff": "^6.0.3"
+    "onoff": "^6.0.3",
+    "ts-node": "^10.9.1"
   },
   "devDependencies": {
-    "standard": "^17.1.0"
+    "standard": "^17.1.0",
+    "ts-standard": "^12.0.2"
   }
 }
