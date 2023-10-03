@@ -2,3 +2,4 @@ node_modules
 tsconfig.buildinfo
 shots/
 dist/
+.env

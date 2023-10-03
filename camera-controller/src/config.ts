@@ -5,7 +5,7 @@ export enum LOG_LEVELS {
 }
 
 export default {
-  logLevel: 1,
+  logLevel: 5,
   gpio: { pin: 3, debounce: 10 },
   socket: {
     port: 3025,
