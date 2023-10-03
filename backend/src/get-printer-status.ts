@@ -34,6 +34,9 @@ export interface StatusData {
 
 export async function getStatus (): Promise<StatusData | null> {
   try {
+      if (process.env.DIGEST_AUTH === undefined) {
+          throw new Error('DIGEST_AUTH environment variable not defined, fix your .env file')
+      }
     const response = await request('http://mk4.lan/api/v1/status', {
       digestAuth: process.env.DIGEST_AUTH,
       dataType: 'json'
