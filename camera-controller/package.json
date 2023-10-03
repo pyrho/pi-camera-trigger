@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "build": "tsc --build",
+    "prestart": "npm run build",
     "start": "node src/index.js",
     "format": "ts-standard --fix"
   },
