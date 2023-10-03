@@ -67,9 +67,9 @@ function setupGpioHook (cameraDaemonInstance: CameraDaemon): void {
     button.unexport()
   })
 
-  console.log('Daemon running')
+  log('Daemon running')
 }
 
 startCameraDaemon()
   .then(setupGpioHook)
-  .catch(console.error)
+  .catch(error)
