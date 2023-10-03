@@ -87,6 +87,7 @@ function startTCPSocketServer(): void {
           await mkdir(path, { recursive: true })
         }
 
+        debouncedLog.flush()
         log(`Merging chunks, len: ${chunks.length}`)
         fs.writeFileSync(`${path}/${+new Date()}.jpg`, Buffer.concat(chunks))
       })
