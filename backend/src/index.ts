@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import serveIndex from 'serve-index'
 import express from 'express'
 import net from 'net'
 import fs from 'fs'
@@ -97,6 +98,7 @@ function startWebServer(): void {
         res.json(status)
       }),
   )
+  app.use('/outputs', express.static('outputs'), serveIndex('outputs', { icons: true }))
 
   app.listen(config.httpServer.port)
   debug('Web server started')
