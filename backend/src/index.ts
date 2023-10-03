@@ -70,8 +70,9 @@ function startTCPSocketServer(): void {
     }
     connectionInProgress = true
 
+    const debouncedLog = debounce(() => log('Got data chunk...'), 1000)
     sock.on('data', function (data) {
-      debounce(() => log('Got data chunk...'), 1000)
+      debouncedLog()
       chunks = [...chunks, data]
     })
 
