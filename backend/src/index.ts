@@ -70,6 +70,7 @@ function startTCPSocketServer(): void {
     connectionInProgress = true
 
     sock.on('data', function (data) {
+      log('Got data chunk...')
       chunks = [...chunks, data]
     })
 
@@ -77,14 +78,15 @@ function startTCPSocketServer(): void {
     sock.on('close', () => {
       getStatus().then(async (status) => {
         const jobId = status?.job?.id ?? lastStatus?.job?.id ?? 'NO_JOB'
-        const path = `./outputs/${jobId }`
+        const path = `./outputs/${jobId}`
         try {
           await access(path, constants.W_OK)
         } catch (_e) {
           await mkdir(path, { recursive: true })
         }
 
-        fs.writeFileSync(`${path }/test.jpg`, Buffer.concat(chunks))
+        log(`Merging chunks, len: ${chunks.length}`)
+        fs.writeFileSync(`${path}/test.jpg`, Buffer.concat(chunks))
       })
 
       chunks = []
