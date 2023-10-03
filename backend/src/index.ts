@@ -86,7 +86,7 @@ function startTCPSocketServer(): void {
         }
 
         log(`Merging chunks, len: ${chunks.length}`)
-        fs.writeFileSync(`${path}/test.jpg`, Buffer.concat(chunks))
+        fs.writeFileSync(`${path}/${+new Date()}.jpg`, Buffer.concat(chunks))
       })
 
       chunks = []
