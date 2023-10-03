@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { access, constants, mkdir } from 'fs/promises'
 import serveIndex from 'serve-index'
 import express from 'express'
 import net from 'net'
@@ -74,9 +75,16 @@ function startTCPSocketServer(): void {
 
     // Add a 'close' event handler to this instance of socket
     sock.on('close', () => {
-      getStatus().then((status) => {
+      getStatus().then(async (status) => {
         const jobId = status?.job?.id ?? lastStatus?.job?.id ?? 'NO_JOB'
-        fs.writeFileSync(`./outputs/${jobId}/test.jpg`, Buffer.concat(chunks))
+        const path = `./outputs/${jobId }`
+        try {
+          await access(path, constants.W_OK)
+        } catch (_e) {
+          await mkdir(path, { recursive: true })
+        }
+
+        fs.writeFileSync(`${path }/test.jpg`, Buffer.concat(chunks))
       })
 
       chunks = []
