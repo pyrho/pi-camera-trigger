@@ -20,5 +20,10 @@
     "standard": "^17.1.0",
     "ts-standard": "^12.0.2",
     "typescript": "^5.2.2"
+  },
+   "ts-standard": {
+    "ignore": [
+      "dist"
+    ]
   }
 }

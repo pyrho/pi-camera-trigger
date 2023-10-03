@@ -3,6 +3,7 @@ import gphoto2 from 'gphoto2'
 import net from 'net'
 
 import config from './config'
+import { debug, error, log } from './logger'
 
 interface CameraDaemon {
   takePicture: () => Promise<Buffer>
@@ -15,11 +16,11 @@ async function startCameraDaemon (): Promise<CameraDaemon> {
       const [camera] = listOfCameras
       if (camera === undefined) return reject(new Error('No cameras found'))
 
-      console.debug(`Found ${camera.model}, ready.`)
+      debug(`Found ${camera.model}, ready.`)
 
       return resolve({
         takePicture: async () => await new Promise((resolve, reject) => {
-          console.debug('Taking picture...')
+          debug('Taking picture...')
           camera.takePicture({ download: true }, (err, data) => {
             if (err != null) return reject(err)
             else return resolve(data)
@@ -30,16 +31,17 @@ async function startCameraDaemon (): Promise<CameraDaemon> {
   })
 }
 
-async function sendPictureToWebhook (imgData: Buffer): Promise<null> {
+async function sendPictureToWebhook (imgData: Buffer): Promise<void> {
   return await new Promise((resolve, reject) => {
     const client = net.createConnection({ ...config.socket }, () => {
-      console.log('Connected to server')
+      debug('Connected to server')
+      client.on('error', e => reject(e))
       client.write(imgData, err => {
         if (err != null) {
           return reject(err)
         } else {
           client.end()
-          return resolve(null)
+          return resolve()
         }
       })
     })
@@ -50,19 +52,16 @@ function setupGpioHook (cameraDaemonInstance: CameraDaemon): void {
   const button = new Gpio(config.gpio.pin, 'in', 'rising', { debounceTimeout: config.gpio.debounce })
 
   button.watch((err) => {
-    if (err != null) console.error(`GPIO error: ${err.message}`)
+    if (err != null) error(`GPIO error: ${err.message}`)
 
-    console.debug('Button pressed')
+    debug('Button pressed')
 
     cameraDaemonInstance.takePicture()
       .then(sendPictureToWebhook)
-      .then(() => {
-        console.log('Image posted successfully!')
-      })
-      .catch((error) => {
-        console.error('Error downloading the image:', error)
-      })
+      .then(() => log('Image posted successfully!'))
+      .catch((error) => error('Error downloading the image:', error))
   })
+
   // Cleanup
   process.on('SIGINT', _ => {
     button.unexport()

@@ -1,4 +1,4 @@
 node_modules
 tsconfig.buildinfo
-shots
+shots/
 dist/
