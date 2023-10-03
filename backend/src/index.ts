@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import debounce from 'debounce'
 import { access, constants, mkdir } from 'fs/promises'
 import serveIndex from 'serve-index'
 import express from 'express'
@@ -70,7 +71,7 @@ function startTCPSocketServer(): void {
     connectionInProgress = true
 
     sock.on('data', function (data) {
-      log('Got data chunk...')
+      debounce(() => log('Got data chunk...'), 1000)
       chunks = [...chunks, data]
     })
 
