@@ -1,22 +1,27 @@
-const Gpio = require('onoff').Gpio
-const config = require('./config')
-const gphoto2 = require('gphoto2')
-const net = require('net')
+import { Gpio } from 'onoff'
+import gphoto2 from 'gphoto2'
+import net from 'net'
 
-function startCameraDaemon () {
-  return new Promise((resolve, reject) => {
+import config from './config'
+
+interface CameraDaemon {
+  takePicture: () => Promise<Buffer>
+}
+
+async function startCameraDaemon (): Promise<CameraDaemon> {
+  return await new Promise((resolve, reject) => {
     const GPhoto = new gphoto2.GPhoto2()
-    GPhoto.list(listOfCameras => {
+    GPhoto.list((listOfCameras) => {
       const [camera] = listOfCameras
-      if (!camera) return reject(new Error('No cameras found'))
+      if (camera === undefined) return reject(new Error('No cameras found'))
 
       console.debug(`Found ${camera.model}, ready.`)
 
       return resolve({
-        takePicture: () => new Promise((resolve, reject) => {
+        takePicture: async () => await new Promise((resolve, reject) => {
           console.debug('Taking picture...')
           camera.takePicture({ download: true }, (err, data) => {
-            if (err) return reject(err)
+            if (err != null) return reject(err)
             else return resolve(data)
           })
         })
@@ -25,16 +30,12 @@ function startCameraDaemon () {
   })
 }
 
-/**
-  * @param {Buffer} imgData - JSDocs on property assignments work
-  * @returns {Promise<null>}
-   */
-function sendPictureToWebhook (imgData) {
-  return new Promise((resolve, reject) => {
-    const client = net.createConnection({ host: 'mk4-rtsp.lan', port: 3025 }, () => {
+async function sendPictureToWebhook (imgData: Buffer): Promise<null> {
+  return await new Promise((resolve, reject) => {
+    const client = net.createConnection({ ...config.socket }, () => {
       console.log('Connected to server')
       client.write(imgData, err => {
-        if (err) {
+        if (err != null) {
           return reject(err)
         } else {
           client.end()
@@ -45,11 +46,11 @@ function sendPictureToWebhook (imgData) {
   })
 }
 
-function setupGpioHook (cameraDaemonInstance) {
+function setupGpioHook (cameraDaemonInstance: CameraDaemon): void {
   const button = new Gpio(config.gpio.pin, 'in', 'rising', { debounceTimeout: config.gpio.debounce })
 
   button.watch((err) => {
-    if (err) console.error(`GPIO error: ${err}`)
+    if (err != null) console.error(`GPIO error: ${err.message}`)
 
     console.debug('Button pressed')
 
