@@ -75,8 +75,8 @@ function startTCPSocketServer(): void {
     })
 
     // Add a 'close' event handler to this instance of socket
-    sock.on('close', () => {
-      getStatus().then(async (status) => {
+    sock.on('close', async () => {
+      await getStatus().then(async (status) => {
         const jobId = status?.job?.id ?? lastStatus?.job?.id ?? 'NO_JOB'
         const path = `./outputs/${jobId}`
         try {
