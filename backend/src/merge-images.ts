@@ -7,7 +7,7 @@ import { error, log } from './logger.js'
 
 async function getFirstFileInDir(jobDir: string): Promise<string> {
   try {
-    const dir = await opendir(`./output/${jobDir}`)
+    const dir = await opendir(`./outputs/${jobDir}`)
     for await (const dirent of dir) {
       if (dirent.isFile()) {
         return dirent.path
@@ -34,7 +34,7 @@ export async function mergeImages(jobDir: string): Promise<null> {
       .inputOptions('-f', 'image2')
       .inputOptions('-framerate', '24')
       .inputOptions('-pattern_type', 'glob')
-      .inputOptions('-i', `./output/${jobDir}/*.jpg`)
+      .inputOptions('-i', `./outputs/${jobDir}/*.jpg`)
 
       .inputOptions('-crf', '20')
       .outputOptions('-c:v', 'libx264')
@@ -44,7 +44,7 @@ export async function mergeImages(jobDir: string): Promise<null> {
       .outputOptions('-s', '1920x1280')
 
       // Output file
-      .saveToFile(`./output/${jobDir}/timelapse.mp4`)
+      .saveToFile(`./outputs/${jobDir}/timelapse.mp4`)
       // .saveToFile(`./output/${outputDir}/${+new Date()}.jpg`)
 
       // The callback that is run when FFmpeg is finished
@@ -61,10 +61,10 @@ export async function mergeImages(jobDir: string): Promise<null> {
 }
 
 export async function deleteImages(jobDir: string): Promise<null> {
-  return readdir(`./output/${jobDir}`)
+  return readdir(`./outputs/${jobDir}`)
     .then((entries) => entries.filter((entry) => entry.endsWith('.jpg')))
     .then(tap((entries) => log(`Cleaning up job dir ${jobDir}, ${entries.length} files...`)))
-    .then((entries) => Promise.all(entries.map((entry) => unlink(`./output/${jobDir}/${entry}`))))
+    .then((entries) => Promise.all(entries.map((entry) => unlink(`./outputs/${jobDir}/${entry}`))))
     .then(tap(() => log('Cleanup complete!')))
     .then(() => null)
 }
