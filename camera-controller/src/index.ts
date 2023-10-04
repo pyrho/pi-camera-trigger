@@ -59,7 +59,7 @@ function setupGpioHook (cameraDaemonInstance: CameraDaemon): void {
     cameraDaemonInstance.takePicture()
       .then(sendPictureToWebhook)
       .then(() => log('Image posted successfully!'))
-      .catch((error) => error('Error downloading the image:', error))
+      .catch((e) => error('Error downloading the image:', e))
   })
 
   // Cleanup
