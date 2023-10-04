@@ -36,7 +36,7 @@ export async function mergeImages(jobDir: string): Promise<null> {
       .inputOptions('-pattern_type', 'glob')
       .inputOptions('-i', `./outputs/${jobDir}/*.jpg`)
 
-      .inputOptions('-crf', '20')
+      .outputOptions('-crf', '20')
       .outputOptions('-c:v', 'libx264')
 
       // Important for iOS playback
