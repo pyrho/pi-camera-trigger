@@ -27,8 +27,18 @@ function getCurrentState(printerStatus: StatusData | null) {
 
 let latestKnownJobId: number | null = null
 
+/**
+ * Set to `false` between prints.
+ * Receiving data on the socket wil turn this to `true`, at this
+ * point a print should be on going, so the loop will continue.
+ * When the print is done the loop will exit and wait for the socket
+ * to wake it up again
+ */
+let monitioringLoopRunning = false
+
 async function monitoringLoop() {
-log('Monitoring loop running...')
+  monitioringLoopRunning = true
+  log('Monitoring loop running...')
   const printerStatus = await getPrinterStatus()
   latestKnownJobId = printerStatus?.job?.id ?? latestKnownJobId
   const state = getCurrentState(printerStatus)
@@ -41,9 +51,10 @@ log('Monitoring loop running...')
     }
     log('Notifying')
     await notify()
+    monitioringLoopRunning = false
+  } else {
+    setTimeout(monitoringLoop, TICK_RATE)
   }
-
-  setTimeout(monitoringLoop, TICK_RATE)
 }
 
 function startTCPSocketServer(): void {
@@ -70,6 +81,9 @@ function startTCPSocketServer(): void {
 
     // Add a 'close' event handler to this instance of socket
     sock.on('close', async () => {
+      // Wake up
+      if (!monitioringLoopRunning) monitoringLoop()
+
       await getPrinterStatus().then(async (status) => {
         const jobId = status?.job?.id ?? latestKnownJobId ?? 'NO_JOB'
         const path = `./outputs/${jobId}`
@@ -112,7 +126,6 @@ function startWebServer(): void {
 function main(): void {
   startTCPSocketServer()
   startWebServer()
-  monitoringLoop()
 }
 
 main()
