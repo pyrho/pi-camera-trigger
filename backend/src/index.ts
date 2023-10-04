@@ -40,7 +40,7 @@ async function startPollPrinterLoop() {
 
   if (thisStatus !== null && !running && stateHasChanged && lastStatus !== null) {
     log('Print done! Notifying.')
-    notify()
+    await notify()
     await mergeImages(`${lastStatus.job.id}`)
     // await deleteImages(`${lastStatus.job.id}`)
   }
