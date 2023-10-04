@@ -34,7 +34,6 @@ async function startPollPrinterLoop() {
         .toISOString()
         .substring(11, 11 + 8)}]`,
     )
-    // await capture(`${thisStatus.job.id}`)
     setTimeout(startPollPrinterLoop, TICK_RATE)
   }
 
@@ -42,11 +41,14 @@ async function startPollPrinterLoop() {
     log('Print done! Notifying.')
     await notify()
     await mergeImages(`${lastStatus.job.id}`)
+    log('Sleeping...')
+    // Let's keep this commented out until we make sure everything works
     // await deleteImages(`${lastStatus.job.id}`)
   }
 
   if (!running) {
     lastStatus = thisStatus
+    setTimeout(main, TICK_RATE)
     log('Sleeping...')
   }
 }
@@ -59,9 +61,6 @@ function startTCPSocketServer(): void {
   })
 
   server.on('connection', function (sock) {
-    // Wake up !
-    startPollPrinterLoop()
-
     let chunks: Buffer[] = []
 
     if (connectionInProgress) {
