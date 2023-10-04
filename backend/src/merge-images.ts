@@ -3,7 +3,7 @@ import ffmpeg from 'fluent-ffmpeg'
 import { opendir, readdir, unlink } from 'node:fs/promises'
 import ffmpegStatic from 'ffmpeg-static'
 import { tap } from './utils'
-import { error, log } from './logger.js'
+import { error, log } from './logger'
 
 async function getFirstFileInDir(jobDir: string): Promise<string> {
   try {

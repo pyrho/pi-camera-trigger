@@ -32,7 +32,7 @@ export interface StatusData {
   printer: PrinterData
 }
 
-export async function getStatus (): Promise<StatusData | null> {
+export async function getPrinterStatus (): Promise<StatusData | null> {
   try {
       if (process.env.DIGEST_AUTH === undefined) {
           throw new Error('DIGEST_AUTH environment variable not defined, fix your .env file')

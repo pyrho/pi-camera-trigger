@@ -8,49 +8,42 @@ import fs from 'fs'
 import config from './config'
 import { debug, error, log } from './logger'
 import cors from 'cors'
-import { StatusData, getStatus } from './get-printer-status'
+import { StatusData, getPrinterStatus } from './get-printer-status'
 import { notify } from './notify'
 import { mergeImages } from './merge-images'
+import { match, P } from 'ts-pattern'
 
 const ONE_SECOND = 1000
 const ONE_MINUTE = ONE_SECOND * 60
-const TICK_RATE = 5 * ONE_MINUTE
+const TICK_RATE = 1 * ONE_MINUTE
 
-let lastStatus: null | StatusData = null
-async function startPollPrinterLoop() {
-  const thisStatus = await getStatus()
-  const running = thisStatus !== null && thisStatus.printer.state === 'PRINTING'
-  const stateHasChanged =
-    thisStatus !== null &&
-    lastStatus !== null &&
-    lastStatus.printer.state !== thisStatus.printer.state
+function getCurrentState(printerStatus: StatusData | null) {
+  return match(printerStatus?.printer?.state)
+    .with(P.nullish, () => 'offline' as const)
+    .with('PRINTING', () => 'print in progress' as const)
+    .with('FINISHED', () => 'print done' as const)
+    .otherwise(() => 'unknown' as const)
+}
 
-  if (running) {
-    lastStatus = thisStatus
-    log(
-      `Printing in progress... [progress:${thisStatus.job.progress}%,time_remaning:${new Date(
-        thisStatus.job.time_remaining * 1000,
-      )
-        .toISOString()
-        .substring(11, 11 + 8)}]`,
-    )
-    setTimeout(startPollPrinterLoop, TICK_RATE)
-  }
+let latestKnownJobId: number | null = null
 
-  if (thisStatus !== null && !running && stateHasChanged && lastStatus !== null) {
-    log('Print done! Notifying.')
+async function monitoringLoop() {
+log('Monitoring loop running...')
+  const printerStatus = await getPrinterStatus()
+  latestKnownJobId = printerStatus?.job?.id ?? latestKnownJobId
+  const state = getCurrentState(printerStatus)
+  if (state === 'print done') {
+    log('Print done!')
+    if (latestKnownJobId !== null) {
+      await mergeImages(`${latestKnownJobId}`)
+    } else {
+      error('Cannot create timelapse, no known jobID')
+    }
+    log('Notifying')
     await notify()
-    await mergeImages(`${lastStatus.job.id}`)
-    log('Sleeping...')
-    // Let's keep this commented out until we make sure everything works
-    // await deleteImages(`${lastStatus.job.id}`)
   }
 
-  if (!running) {
-    lastStatus = thisStatus
-    setTimeout(main, TICK_RATE)
-    log('Sleeping...')
-  }
+  setTimeout(monitoringLoop, TICK_RATE)
 }
 
 function startTCPSocketServer(): void {
@@ -77,8 +70,8 @@ function startTCPSocketServer(): void {
 
     // Add a 'close' event handler to this instance of socket
     sock.on('close', async () => {
-      await getStatus().then(async (status) => {
-        const jobId = status?.job?.id ?? lastStatus?.job?.id ?? 'NO_JOB'
+      await getPrinterStatus().then(async (status) => {
+        const jobId = status?.job?.id ?? latestKnownJobId ?? 'NO_JOB'
         const path = `./outputs/${jobId}`
         try {
           await access(path, constants.W_OK)
@@ -106,7 +99,7 @@ function startWebServer(): void {
   app.get(
     '/status',
     async (_, res) =>
-      await getStatus().then((status) => {
+      await getPrinterStatus().then((status) => {
         res.json(status)
       }),
   )
@@ -119,7 +112,7 @@ function startWebServer(): void {
 function main(): void {
   startTCPSocketServer()
   startWebServer()
-  startPollPrinterLoop()
+  monitoringLoop()
 }
 
 main()
