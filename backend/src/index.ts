@@ -10,7 +10,7 @@ import { debug, error, log } from './logger'
 import cors from 'cors'
 import { StatusData, getPrinterStatus } from './get-printer-status'
 import { notify } from './notify'
-import { mergeImages } from './merge-images'
+import { deleteImages, mergeImages } from './merge-images'
 import { match, P } from 'ts-pattern'
 
 const ONE_SECOND = 1000
@@ -46,10 +46,11 @@ async function monitoringLoop() {
     log('Print done!')
     if (latestKnownJobId !== null) {
       await mergeImages(`${latestKnownJobId}`)
+      await deleteImages(`${latestKnownJobId}`)
     } else {
       error('Cannot create timelapse, no known jobID')
     }
-    log('Notifying')
+    log('Notifying and exiting monitoring loop')
     await notify()
     monitioringLoopRunning = false
   } else {
@@ -82,7 +83,10 @@ function startTCPSocketServer(): void {
     // Add a 'close' event handler to this instance of socket
     sock.on('close', async () => {
       // Wake up
-      if (!monitioringLoopRunning) monitoringLoop()
+      if (!monitioringLoopRunning) {
+        log('First picture taken, waking up monitoring loop...')
+        monitoringLoop()
+      }
 
       await getPrinterStatus().then(async (status) => {
         const jobId = status?.job?.id ?? latestKnownJobId ?? 'NO_JOB'
