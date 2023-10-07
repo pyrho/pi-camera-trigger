@@ -57,7 +57,28 @@ export async function mergeImages(jobDir: string): Promise<null> {
       .on('error', (error: any) => {
         return reject(error)
       })
-  })
+  }).then(
+    () =>
+      new Promise((resolve, reject) => {
+    // ffmpeg -i out.mp4 -vf  "thumbnail,scale=640:360" -frames:v 1 thumb.png
+        ffmpeg()
+          .inputOptions('-i', `./outputs/${jobDir}/timelapse.mp4`)
+          .inputOptions('-vf', 'thumbnail,scale=600:400')
+          .inputOptions('-frames:v', '1')
+
+          .saveToFile(`thumbnail.png`)
+          // The callback that is run when FFmpeg is finished
+          .on('end', () => {
+            log('Thumbnail created!')
+            return resolve(null)
+          })
+
+          // The callback that is run when FFmpeg encountered an error
+          .on('error', (error: any) => {
+            return reject(error)
+          })
+      }),
+  )
 }
 
 export async function deleteImages(jobDir: string): Promise<null> {
@@ -68,4 +89,3 @@ export async function deleteImages(jobDir: string): Promise<null> {
     .then(tap(() => log('Cleanup complete!')))
     .then(() => null)
 }
-
