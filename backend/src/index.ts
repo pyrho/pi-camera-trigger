@@ -155,7 +155,7 @@ function startWebServer(): void {
     return res.json(await Promise.all(
       dirs.map(async (dir) => ({
         name: dir,
-        path: dir,
+        path: `${dir}/timelapse.mp4`,
         imgData: await convertImageToBase64(`./${dir}/thumb.png`),
       })),
     ))
