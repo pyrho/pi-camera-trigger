@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import path from 'path'
 import debounce from 'debounce'
 import { access, constants, mkdir } from 'fs/promises'
 import serveIndex from 'serve-index'
@@ -12,6 +13,7 @@ import { StatusData, getPrinterStatus } from './get-printer-status'
 import { notify } from './notify'
 import { deleteImages, mergeImages } from './merge-images'
 import { match, P } from 'ts-pattern'
+import ExpressProxy from 'express-http-proxy'
 
 const ONE_SECOND = 1000
 const ONE_MINUTE = ONE_SECOND * 60
@@ -111,6 +113,7 @@ function startTCPSocketServer(): void {
 
 function startWebServer(): void {
   const app = express()
+  const proxy = ExpressProxy
 
   app.use(cors())
 
@@ -121,7 +124,45 @@ function startWebServer(): void {
         res.json(status)
       }),
   )
+
+  app.use(express.static('public'))
+  app.get('/timelapses', async (_, res) => {
+    const convertImageToBase64 = async (filePath: string): Promise<string> => {
+      const imageBuffer = await fs.promises.readFile(filePath)
+      const base64Image = imageBuffer.toString('base64')
+      return base64Image
+    }
+
+    //
+    const f = async () => {
+      const files = await fs.promises.readdir('./outputs')
+
+      const x = await Promise.all(
+        files.map(async (file) => {
+          const directory = path.join('./outputs', file)
+          const stats = await fs.promises.stat(directory)
+          if (stats.isDirectory()) {
+            const timelapseFile = path.join(directory, 'timelapse.mp4')
+            if (fs.existsSync(timelapseFile)) return directory
+          }
+        }),
+      )
+      return x.filter(Boolean)
+    }
+
+    const dirs = await f()
+
+    return res.json(await Promise.all(
+      dirs.map(async (dir) => ({
+        name: dir,
+        path: dir,
+        imgData: await convertImageToBase64(`./${dir}/thumb.png`),
+      })),
+    ))
+  })
+
   app.use('/outputs', express.static('outputs'), serveIndex('outputs', { icons: true }))
+  app.use('/', proxy('mk4.lan'))
 
   app.listen(config.httpServer.port)
   debug('Web server started')
