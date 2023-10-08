@@ -117,6 +117,7 @@ function startWebServer(): void {
 
   app.use(cors())
 
+  // Not sure if this is actually used.
   app.get(
     '/status',
     async (_, res) =>
@@ -126,6 +127,7 @@ function startWebServer(): void {
   )
 
   app.use(express.static('public'))
+
   app.get('/timelapses', async (_, res) => {
     const convertImageToBase64 = async (filePath: string): Promise<string> => {
       const imageBuffer = await fs.promises.readFile(filePath)
@@ -133,39 +135,41 @@ function startWebServer(): void {
       return base64Image
     }
 
-    //
-    const f = async () => {
-      const files = await fs.promises.readdir('./outputs')
+    const getDirectoriesWithTimelapses = () =>
+      fs.promises
+        .readdir('./outupts')
+        .then((files) =>
+          Promise.all(
+            files.map(async (file) => {
+              const directory = path.join('./outputs', file)
+              const stats = await fs.promises.stat(directory)
+              if (stats.isDirectory()) {
+                const timelapseFile = path.join(directory, 'timelapse.mp4')
+                if (fs.existsSync(timelapseFile)) return directory
+              }
+            }),
+          ),
+        )
+        .then((dirs) => dirs.filter(Boolean))
 
-      const x = await Promise.all(
-        files.map(async (file) => {
-          const directory = path.join('./outputs', file)
-          const stats = await fs.promises.stat(directory)
-          if (stats.isDirectory()) {
-            const timelapseFile = path.join(directory, 'timelapse.mp4')
-            if (fs.existsSync(timelapseFile)) return directory
-          }
-        }),
-      )
-      return x.filter(Boolean)
-    }
+    const directoriesWithTimelapses = await getDirectoriesWithTimelapses()
 
-    const dirs = await f()
-
-    return res.json(await Promise.all(
-      dirs.map(async (dir) => ({
-        name: dir,
-        path: `${dir}/timelapse.mp4`,
-        imgData: await convertImageToBase64(`./${dir}/thumb.png`),
-      })),
-    ))
+    return res.json(
+      await Promise.all(
+        directoriesWithTimelapses.map(async (dir) => ({
+          name: dir,
+          path: `${dir}/timelapse.mp4`,
+          imgData: await convertImageToBase64(`./${dir}/thumb.png`),
+        })),
+      ),
+    )
   })
 
-  app.use('/outputs', express.static('outputs'), serveIndex('outputs', { icons: true }))
+  // Proxy PrusaLink requests to the printer
   app.use('/', proxy('mk4.lan'))
 
   app.listen(config.httpServer.port)
-  debug('Web server started')
+  debug(`Web server started on port ${config.httpServer.port}`)
 }
 
 function main(): void {

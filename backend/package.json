@@ -36,7 +36,6 @@
     "express-http-proxy": "^2.0.0",
     "ffmpeg-static": "^5.2.0",
     "fluent-ffmpeg": "^2.1.2",
-    "serve-index": "^1.9.1",
     "ts-pattern": "^5.0.5",
     "urllib": "^3.19.3"
   }
