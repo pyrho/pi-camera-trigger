@@ -166,7 +166,12 @@ function startWebServer(): void {
   })
 
   // Proxy PrusaLink requests to the printer
-  app.use('/', proxy('mk4.lan'))
+  app.use(
+    '/',
+    proxy('mk4.lan', {
+      limit: '500mb',
+    }),
+  )
 
   app.listen(config.httpServer.port)
   debug(`Web server started on port ${config.httpServer.port}`)
