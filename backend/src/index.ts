@@ -2,7 +2,6 @@ import 'dotenv/config'
 import path from 'path'
 import debounce from 'debounce'
 import { access, constants, mkdir } from 'fs/promises'
-import serveIndex from 'serve-index'
 import express from 'express'
 import net from 'net'
 import fs from 'fs'
@@ -127,6 +126,7 @@ function startWebServer(): void {
   )
 
   app.use(express.static('public'))
+  app.use('/outputs', express.static('outputs'))
 
   app.get('/timelapses', async (_, res) => {
     const convertImageToBase64 = async (filePath: string): Promise<string> => {
