@@ -50,7 +50,9 @@ export async function mergeImages(jobDir: string): Promise<null> {
       // The callback that is run when FFmpeg is finished
       .on('end', () => {
         log('Timelapse created!')
-        return resolve(null)
+        // I've seen the thumbnail creation fail, might be 
+        // because the file isn't available yet?
+        return setTimeout(() => resolve(null), 1000)
       })
 
       // The callback that is run when FFmpeg encountered an error
@@ -66,7 +68,7 @@ export async function mergeImages(jobDir: string): Promise<null> {
           .inputOptions('-vf', 'thumbnail,scale=600:400')
           .inputOptions('-frames:v', '1')
 
-          .saveToFile(`thumbnail.png`)
+          .saveToFile(`thumb.png`)
           // The callback that is run when FFmpeg is finished
           .on('end', () => {
             log('Thumbnail created!')
