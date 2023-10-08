@@ -63,8 +63,7 @@ export async function mergeImages(jobDir: string): Promise<null> {
     () =>
       new Promise((resolve, reject) => {
     // ffmpeg -i out.mp4 -vf  "thumbnail,scale=640:360" -frames:v 1 thumb.png
-        ffmpeg()
-          .inputOptions('-i', `./outputs/${jobDir}/timelapse.mp4`)
+        ffmpeg(`./outputs/${jobDir}/timelapse.mp4`)
           .inputOptions('-vf', 'thumbnail,scale=600:400')
           .inputOptions('-frames:v', '1')
 
