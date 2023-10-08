@@ -137,7 +137,7 @@ function startWebServer(): void {
 
     const getDirectoriesWithTimelapses = () =>
       fs.promises
-        .readdir('./outupts')
+        .readdir('./outputs')
         .then((files) =>
           Promise.all(
             files.map(async (file) => {
