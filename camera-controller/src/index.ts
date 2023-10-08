@@ -22,10 +22,10 @@ const takePicture = (() => {
       }
     })
 
-    // Get the camera at load time to speed up the first picture
-    getCamera().then(() => debug('Camera initialized at load time'))
+  // Get the camera at load time to speed up the first picture
+  getCamera().then(() => debug('Camera initialized at load time'))
 
-  return () =>
+  const takePicture = (retried = false) =>
     new Promise<Buffer>((resolve, reject) => {
       debug('Taking picture...')
       getCamera().then((camera) =>
@@ -36,6 +36,8 @@ const takePicture = (() => {
             // Setting `cameraInstance` to null will force a reinstantiation
             // of the camera
             cameraInstance = null
+            // Retry once
+            if (!retried) return takePicture(true)
             return reject(err)
           } else {
             return resolve(data)
@@ -43,6 +45,7 @@ const takePicture = (() => {
         }),
       )
     })
+  return takePicture
 })()
 
 async function sendPictureToWebhook(imgData: Buffer): Promise<void> {
