@@ -27,9 +27,9 @@ const takePicture = (() => {
 
   const takePicture = (retried = false) =>
     new Promise<Buffer>((resolve, reject) => {
-      debug('Taking picture...')
-      getCamera().then((camera) =>
-        camera.takePicture({ download: true }, (err, data) => {
+      getCamera().then((camera) => {
+        debug('Taking picture...')
+        return camera.takePicture({ download: true }, (err, data) => {
           if (err !== null && err !== undefined) {
             // In the "normal" case, this will happen
             // if the camera is disconnected
@@ -42,8 +42,8 @@ const takePicture = (() => {
           } else {
             return resolve(data)
           }
-        }),
-      )
+        })
+      })
     })
   return takePicture
 })()
