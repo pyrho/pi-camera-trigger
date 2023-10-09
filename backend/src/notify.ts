@@ -14,19 +14,20 @@ export async function notify(message = 'Print done!'): Promise<void> {
 const TARGET_TEMP = 35
 
 async function bedTempNotification() {
-  return new Promise(async (resolve) => {
-    const printerStatus = await getPrinterStatus()
-    const bedTemp = printerStatus?.printer.temp_bed
-    if (bedTemp !== undefined) {
-      const iId = setInterval(() => {
+  return new Promise((resolve) => {
+    const iId = setInterval(async () => {
+      const printerStatus = await getPrinterStatus()
+      const bedTemp = printerStatus?.printer.temp_bed
+      if (bedTemp !== undefined) {
+        log(`Bed temp currently at: ${bedTemp}`)
         if (bedTemp <= TARGET_TEMP) {
           clearInterval(iId)
           return resolve(notify(`Bed temp below ${TARGET_TEMP}C`))
         }
-        log(`Bed temp currently at: ${bedTemp}`)
-      }, 1000 * 60)
-    } else {
-      debug('No bed temp data.')
-    }
+      } else {
+        clearInterval(iId)
+        debug('No bed temp data.')
+      }
+    }, 1000 * 60)
   })
 }
