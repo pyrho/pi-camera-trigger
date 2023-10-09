@@ -6,9 +6,10 @@ export async function notify(message = 'Print done!'): Promise<void> {
   return request(`http://ntfy.sh/${process.env.NTFY_TOPIC}`, {
     method: 'POST',
     data: message,
-  }).then(() => {
-    bedTempNotification()
-  })
+  }).then(() => {})
+  // }).then(() => {
+  //   bedTempNotification()
+  // })
 }
 
 const TARGET_TEMP = 35
