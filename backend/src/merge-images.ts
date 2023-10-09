@@ -64,10 +64,10 @@ export async function mergeImages(jobDir: string): Promise<null> {
       new Promise((resolve, reject) => {
     // ffmpeg -i out.mp4 -vf  "thumbnail,scale=640:360" -frames:v 1 thumb.png
         ffmpeg(`./outputs/${jobDir}/timelapse.mp4`)
-          .inputOptions('-vf', 'thumbnail,scale=600:400')
-          .inputOptions('-frames:v', '1')
+          .outputOptions('-vf', 'thumbnail,scale=600:400')
+          .outputOptions('-frames:v', '1')
 
-          .saveToFile(`thumb.png`)
+          .saveToFile(`./outputs/${jobDir}/thumb.png`)
           // The callback that is run when FFmpeg is finished
           .on('end', () => {
             log('Thumbnail created!')
