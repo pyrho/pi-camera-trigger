@@ -89,4 +89,22 @@ function setupGpioHook(): void {
   log('Daemon running')
 }
 
-setupGpioHook()
+function takeEveryTwoMinutes() {
+  setInterval(
+    () => {
+      takePicture()
+        .then(sendPictureToWebhook)
+        .then(() => log('Image posted successfully!'))
+        .catch((e) => error('Error downloading the image:', e))
+    },
+    1000 * 60 * 2,
+  )
+}
+
+if (process.argv[2] === '--interval') {
+  log('Starting interval mode')
+  takeEveryTwoMinutes()
+} else {
+  log('Starting GPIO mode')
+  setupGpioHook()
+}
